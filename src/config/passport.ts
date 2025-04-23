@@ -13,20 +13,24 @@ async (accessToken, refreshToken, profile, done) => {
   try {
     const email = profile.emails?.[0].value;
 
-    let user = await prisma.usuario.findUnique({ where: { email } });
+    if (!email) {
+      return done(new Error("No se pudo obtener el email de Google"), false);
+    }
+    
+    let user = await prisma.usuario.findUnique({ where: { email } });  // ✅ Ahora email es string seguro
 
     if (!user) {
       user = await prisma.usuario.create({
         data: {
           email,
-          nombre_completo: profile.displayName || "",
+          nombre_completo: profile.displayName || "", registrado_con: 'google',
         },
       });
     }
 
     done(null, user);
   } catch (error) {
-    done(error, null);
+    done(error, undefined);
   }
 }));
 
