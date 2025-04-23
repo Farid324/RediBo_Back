@@ -1,14 +1,63 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+model Usuario {
+  id_usuario       Int                  @id @default(autoincrement())
+  nombre_completo  String               @db.VarChar(100)
+  email            String               @unique @db.VarChar(100)
+  contraseña       String? @default("") @db.VarChar(255)
+  fecha_nacimiento DateTime?
+  telefono         Int?
+  registrado_con   RegistradoCon
+  fecha_registro   DateTime             @default(now())
+  verificado        Boolean   @default(false)   
+  host              Boolean   @default(false)
+  driver            Boolean   @default(false)
+
+  codigoVerificacion String?
+  isBlocked Boolean @default(false)
+  blockuntil DateTime?
+  failedCodeAttempts Int @default(0)
+
+  verificaciones   Verificaciones[]
+  terminosCondiciones Terminos_condiciones[]
+}
+
+model Verificaciones {
+  id_codigo   Int       @id @default(autoincrement())
+  id_usuario Int
+  codigo      String    @db.VarChar(6)
+  tipo        TipoVerificacion
+  creado_en   DateTime  @default(now())
+  expiracion  DateTime
+  usado       Boolean   @default(false)
+
+  usuario     Usuario   @relation(fields: [id_usuario], references: [id_usuario])
+}
+
+model Terminos_condiciones {
+  id_aceptacion Int      @id @default(autoincrement())
+  id_usuario    Int
+  version_terminos String @db.VarChar(10)
+  fecha_aceptacion DateTime
+
+  usuario        Usuario @relation(fields: [id_usuario], references: [id_usuario])
+}
+
+// Enum para registrado_con
+enum RegistradoCon {
+  email
+  google
+}
+
+// Enum para tipo en verificaciones
+enum TipoVerificacion {
+  recuperacion
+  verificacion
 }
